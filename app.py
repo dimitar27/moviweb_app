@@ -8,11 +8,33 @@ os.makedirs(app.instance_path, exist_ok=True)
 db_path = os.path.join(app.instance_path, "moviwebapp.db")
 data_manager = SQLiteDataManager(app, db_path)
 
+@app.route('/')
+def home():
+    pass
 
 @app.route('/users')
 def list_users():
-    users = data_manager.get_all_users()
-    return str(users)  # Temporarily returning users as a string
+    pass
+
+@app.route('/users/<int:user_id>')
+def user_movies(user_id):
+    pass
+
+@app.route('/add_user', methods=['GET', 'POST'])
+def add_user():
+    pass
+
+@app.route('/users/<int:user_id>/add_movie', methods=['GET', 'POST'])
+def add_movie(user_id):
+    pass
+
+@app.route('/users/<int:user_id>/update_movie/<int:movie_id>', methods=['GET', 'POST'])
+def update_movie(user_id, movie_id):
+    pass
+
+@app.route('/users/<int:user_id>/delete_movie/<int:movie_id>', methods=['POST'])
+def delete_movie(user_id, movie_id):
+    pass
 
 if __name__ == "__main__":
     app.run(debug=True)
