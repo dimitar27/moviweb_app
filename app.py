@@ -16,7 +16,11 @@ OMDB_API_KEY = os.getenv("OMDB_API_KEY")
 
 @app.route('/')
 def home():
-    return "Hello"
+    try:
+        recent_movies = data_manager.get_recent_movies(limit=6)  # or whatever number you prefer
+        return render_template('home.html', recent_movies=recent_movies)
+    except Exception as e:
+        return f"Error loading home page: {str(e)}", 500
 
 @app.route('/users')
 def list_users():
@@ -78,6 +82,7 @@ def add_movie(user_id):
             director = data.get('Director', 'Unknown')
             year = data.get('Year', '0')
             rating = data.get('imdbRating', '0')
+            poster = data.get('Poster', '')
 
             if year.isdigit():
                 year = int(year)
@@ -94,7 +99,8 @@ def add_movie(user_id):
                 "name": movie_title,
                 "director": director,
                 "year": year,
-                "rating": rating
+                "rating": rating,
+                "poster": poster
             }
 
             data_manager.add_movie(movie)
@@ -105,6 +111,7 @@ def add_movie(user_id):
             return f"Movie '{title}' not found in OMDb!", 400
 
     return render_template('add_movie.html', user=user)
+
 
 @app.route('/users/<int:user_id>/update_movie/<int:movie_id>', methods=['GET', 'POST'])
 def update_movie(user_id, movie_id):

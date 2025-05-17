@@ -26,6 +26,7 @@ class SQLiteDataManager(DataManagerInterface):
                   director TEXT NOT NULL,
                   year     INTEGER,
                   rating   REAL,
+                  poster   TEXT,
                   FOREIGN KEY(user_id) REFERENCES users(id)
                 );
             """))
@@ -59,15 +60,16 @@ class SQLiteDataManager(DataManagerInterface):
     def add_movie(self, movie):
         db.session.execute(
             text("""
-                   INSERT INTO movies (user_id, name, director, year, rating)
-                   VALUES (:user_id, :name, :director, :year, :rating);
-               """),
+                INSERT INTO movies (user_id, name, director, year, rating, poster)
+                VALUES (:user_id, :name, :director, :year, :rating, :poster);
+            """),
             {
                 "user_id": movie["user_id"],
                 "name": movie["name"],
                 "director": movie["director"],
                 "year": movie["year"],
-                "rating": movie["rating"]
+                "rating": movie["rating"],
+                "poster": movie["poster"]
             }
         )
         db.session.commit()
@@ -100,3 +102,18 @@ class SQLiteDataManager(DataManagerInterface):
             {"movie_id": movie_id}
         )
         db.session.commit()
+
+    def get_recent_movies(self, limit=3):
+        rows = db.session.execute(
+            text("""
+                SELECT name, director, year, rating, poster
+                FROM movies
+                ORDER BY id DESC
+                LIMIT :limit;
+            """),
+            {"limit": limit}
+        ).fetchall()
+        result = []
+        for row in rows:
+            result.append(dict(row._mapping))
+        return result

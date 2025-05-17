@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Home - MovieWeb{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 section-heading text-center">Recently Added Movies</h2>
+
+<div class="container">
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+    {% for movie in recent_movies %}
+<div class="col">
+  <div class="card h-100 text-white" style="background-color: #1e2a38; border-radius: 12px;">
+    {% if movie.poster %}
+    <img src="{{ movie.poster }}" class="card-img-top p-2"
+         alt="{{ movie.name }}"
+         style="height: 300px; object-fit: contain; border-radius: 12px;">
+    {% endif %}
+    <div class="card-body">
+      <h5 class="card-title fw-semibold" style="font-size: 1.1rem;">
+        {{ movie.name }} ({{ movie.year }})
+      </h5>
+      <p class="card-text text-muted mb-1" style="font-size: 0.9rem;">
+        🎬 <span class="text-light">{{ movie.director }}</span>
+      </p>
+      <p class="card-text text-muted mb-0" style="font-size: 0.9rem;">
+        ⭐ <span class="text-warning">{{ movie.rating }}/10</span>
+      </p>
+    </div>
+  </div>
+</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
