@@ -20,27 +20,36 @@ def home():
 
 @app.route('/users')
 def list_users():
-    users = data_manager.get_all_users()
-    return render_template('users.html', users=users)
+    try:
+        users = data_manager.get_all_users()
+        return render_template('users.html', users=users)
+    except Exception as e:
+        return f"Error loading users: {str(e)}", 500
 
 @app.route('/users/<int:user_id>')
 def user_movies(user_id):
-    user = None
-    movies = data_manager.get_user_movies(user_id)
-    users = data_manager.get_all_users()
-    for u in users:
-        if u["id"] == user_id:
-            user = u
-            break
-    return render_template('user_movies.html', user=user, movies=movies)
+    try:
+        user = None
+        movies = data_manager.get_user_movies(user_id)
+        users = data_manager.get_all_users()
+        for u in users:
+            if u["id"] == user_id:
+                user = u
+                break
+        return render_template('user_movies.html', user=user, movies=movies)
+    except Exception as e:
+        return f"Error loading user's movies: {str(e)}", 500
 
 @app.route('/add_user', methods=['GET', 'POST'])
 def add_user():
-    if request.method == 'POST':
-        username = request.form['username']
-        data_manager.add_user(username)
-        return redirect(url_for('list_users'))
-    return render_template('add_user.html')
+    try:
+        if request.method == 'POST':
+            username = request.form['username']
+            data_manager.add_user(username)
+            return redirect(url_for('list_users'))
+        return render_template('add_user.html')
+    except Exception as e:
+        return f"Error adding user: {str(e)}", 500
 
 @app.route('/users/<int:user_id>/add_movie', methods=['GET', 'POST'])
 def add_movie(user_id):
@@ -57,9 +66,12 @@ def add_movie(user_id):
     if request.method == 'POST':
         title = request.form['title']
 
-        url = f"http://www.omdbapi.com/?t={title}&apikey={OMDB_API_KEY}"
-        response = requests.get(url)
-        data = response.json()
+        try:
+            url = f"http://www.omdbapi.com/?t={title}&apikey={OMDB_API_KEY}"
+            response = requests.get(url)
+            data = response.json()
+        except Exception as e:
+            return f"Error fetching movie from OMDb: {str(e)}", 500
 
         if data.get('Response') == 'True':
             movie_title = data.get('Title', title)
@@ -96,41 +108,58 @@ def add_movie(user_id):
 
 @app.route('/users/<int:user_id>/update_movie/<int:movie_id>', methods=['GET', 'POST'])
 def update_movie(user_id, movie_id):
-    user = None
-    for u in data_manager.get_all_users():
-        if u['id'] == user_id:
-            user = u
-            break
+    try:
+        user = None
+        for u in data_manager.get_all_users():
+            if u['id'] == user_id:
+                user = u
+                break
 
-    if user is None:
-        return "User not found", 404
+        if user is None:
+            return "User not found", 404
 
-    movies = data_manager.get_user_movies(user_id)
-    movie = None
-    for m in movies:
-        if m['id'] == movie_id:
-            movie = m
-            break
+        movies = data_manager.get_user_movies(user_id)
+        movie = None
+        for m in movies:
+            if m['id'] == movie_id:
+                movie = m
+                break
 
-    if movie is None:
-        return "Movie not found", 404
+        if movie is None:
+            return "Movie not found", 404
 
-    if request.method == 'POST':
-        movie['name'] = request.form['name']
-        movie['director'] = request.form['director']
-        movie['year'] = int(request.form['year'])
-        movie['rating'] = float(request.form['rating'])
+        if request.method == 'POST':
+            movie['name'] = request.form['name']
+            movie['director'] = request.form['director']
+            movie['year'] = int(request.form['year'])
+            movie['rating'] = float(request.form['rating'])
 
-        data_manager.update_movie(movie)
+            data_manager.update_movie(movie)
 
-        return redirect(url_for('user_movies', user_id=user_id))
+            return redirect(url_for('user_movies', user_id=user_id))
 
-    return render_template('update_movie.html', user=user, movie=movie)
+        return render_template('update_movie.html', user=user, movie=movie)
+
+    except Exception as e:
+        return f"Error updating movie: {str(e)}", 500
+
 
 @app.route('/users/<int:user_id>/delete_movie/<int:movie_id>', methods=['POST'])
 def delete_movie(user_id, movie_id):
-    data_manager.delete_movie(movie_id)
-    return redirect(url_for('user_movies', user_id=user_id))
+    try:
+        data_manager.delete_movie(movie_id)
+        return redirect(url_for('user_movies', user_id=user_id))
+    except Exception as e:
+        return f"Error deleting movie: {str(e)}", 500
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500
 
 
 if __name__ == "__main__":
