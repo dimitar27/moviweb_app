@@ -1,36 +1,55 @@
 import os
-from flask import Flask, render_template
-from datamanager.sqlite_data_manager import SQLiteDataManager
-from flask import request, redirect, url_for
-from dotenv import load_dotenv
-import requests
-from flask import flash
 
+import requests
+from dotenv import load_dotenv
+from flask import Flask, render_template
+from flask import flash
+from flask import request, redirect, url_for
+
+from datamanager.sqlite_data_manager import SQLiteDataManager
+
+# Initialize Flask app
 app = Flask(__name__, instance_relative_config=True)
 app.secret_key = "dev"
 os.makedirs(app.instance_path, exist_ok=True)
 
+# Set up database and data manager
 db_path = os.path.join(app.instance_path, "moviwebapp.db")
 data_manager = SQLiteDataManager(app, db_path)
 
+# Load OMDb API key
 load_dotenv()
 OMDB_API_KEY = os.getenv("OMDB_API_KEY")
 
+
 @app.route('/')
 def home():
+    """Display the homepage with a list of top-rated movies."""
     movies = data_manager.get_top_movies()
     return render_template('home.html', recent_movies=movies)
 
+
 @app.route('/users')
 def list_users():
+    """Display a list of all users."""
     try:
         users = data_manager.get_all_users()
         return render_template('users.html', users=users)
     except Exception as e:
         return f"Error loading users: {str(e)}", 500
 
+
 @app.route('/users/<int:user_id>')
 def user_movies(user_id):
+    """
+    Display movies for a specific user.
+
+    Args:
+        user_id (int): The ID of the user.
+
+    Returns:
+            Rendered template for user's movie list.
+    """
     try:
         user = None
         movies = data_manager.get_user_movies(user_id)
@@ -44,8 +63,15 @@ def user_movies(user_id):
     except Exception as e:
         return f"Error loading user's movies: {str(e)}", 500
 
+
 @app.route('/add_user', methods=['GET', 'POST'])
 def add_user():
+    """
+    Add a new user.
+
+    GET: Render the user creation form.
+    POST: Add user to database and redirect to user list.
+    """
     try:
         if request.method == 'POST':
             username = request.form['username']
@@ -55,8 +81,15 @@ def add_user():
     except Exception as e:
         return f"Error adding user: {str(e)}", 500
 
+
 @app.route('/users/<int:user_id>/delete', methods=['POST'])
 def delete_user(user_id):
+    """
+    Delete a user by ID.
+
+    Args:
+        user_id (int): The ID of the user to delete.
+    """
     try:
         data_manager.delete_user(user_id)
         flash("User deleted successfully!", "success")
@@ -65,10 +98,21 @@ def delete_user(user_id):
         flash(f"Error deleting user: {str(e)}", "danger")
         return redirect(url_for('list_users'))
 
+
 @app.route('/users/<int:user_id>/add_movie', methods=['GET', 'POST'])
 def add_movie(user_id):
+    """
+    Add a movie to a user's collection.
+
+    GET: Render the movie addition form.
+    POST: Validate, fetch data from OMDb API, and add the movie.
+    """
     all_users = data_manager.get_all_users()
-    user = next((u for u in all_users if u["id"] == user_id), None)
+    user = None
+    for u in all_users:
+        if u["id"] == user_id:
+            user = u
+            break
 
     if user is None:
         return "User not found", 404
@@ -83,7 +127,9 @@ def add_movie(user_id):
                 return redirect(url_for('add_movie', user_id=user_id))
 
         try:
-            url = f"http://www.omdbapi.com/?t={title}&apikey={OMDB_API_KEY}"
+            url = (
+                f"http://www.omdbapi.com/?t={title}&apikey={OMDB_API_KEY}"
+            )
             response = requests.get(url)
             data = response.json()
         except Exception as e:
@@ -112,7 +158,7 @@ def add_movie(user_id):
             }
 
             data_manager.add_movie(movie)
-            #flash('Movie added successfully!', 'success')
+            # flash('Movie added successfully!', 'success')
             return redirect(url_for('user_movies', user_id=user_id))
         else:
             flash(f"Movie '{title}' not found in OMDb!", 'danger')
@@ -120,15 +166,33 @@ def add_movie(user_id):
 
     return render_template('add_movie.html', user=user)
 
-@app.route('/users/<int:user_id>/update_movie/<int:movie_id>', methods=['GET', 'POST'])
+
+@app.route(
+    '/users/<int:user_id>/update_movie/<int:movie_id>',
+    methods=['GET', 'POST']
+)
 def update_movie(user_id, movie_id):
+    """
+    Update a specific movie in a user's collection.
+
+    GET: Display pre-filled form.
+    POST: Validate and save updated movie data.
+    """
     try:
-        user = next((u for u in data_manager.get_all_users() if u['id'] == user_id), None)
+        user = None
+        for u in data_manager.get_all_users():
+            if u['id'] == user_id:
+                user = u
+                break
         if user is None:
             return "User not found", 404
 
         movies = data_manager.get_user_movies(user_id)
-        movie = next((m for m in movies if m['id'] == movie_id), None)
+        movie = None
+        for m in movies:
+            if m['id'] == movie_id:
+                movie = m
+                break
         if movie is None:
             return "Movie not found", 404
 
@@ -166,20 +230,34 @@ def update_movie(user_id, movie_id):
         return f"Error updating movie: {str(e)}", 500
 
 
-@app.route('/users/<int:user_id>/delete_movie/<int:movie_id>', methods=['POST'])
+@app.route(
+    '/users/<int:user_id>/delete_movie/<int:movie_id>',
+    methods=['POST']
+)
 def delete_movie(user_id, movie_id):
+    """
+    Delete a specific movie from a user's collection.
+
+    Args:
+        user_id (int): The ID of the user.
+        movie_id (int): The ID of the movie to delete.
+    """
     try:
         data_manager.delete_movie(movie_id)
         return redirect(url_for('user_movies', user_id=user_id))
     except Exception as e:
         return f"Error deleting movie: {str(e)}", 500
 
+
 @app.errorhandler(404)
 def page_not_found(e):
+    """Custom handler for 404 errors."""
     return render_template('404.html'), 404
+
 
 @app.errorhandler(500)
 def internal_server_error(e):
+    """Custom handler for 500 errors."""
     return render_template('500.html'), 500
 
 
