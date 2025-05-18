@@ -1,26 +1,29 @@
 {% extends 'base.html' %}
-{% block title %}Add User - MovieWeb{% endblock %}
+{% block title %}Add New User{% endblock %}
 
 {% block content %}
-<h2 class="text-center text-white mb-4" style="font-weight: 600;">Add New User</h2>
+<h2 class="mb-4 text-white text-center fw-bold">Add New User</h2>
 
 <div class="d-flex justify-content-center">
-  <div class="card shadow-card p-4 bg-dark text-white" style="max-width: 400px; width: 100%;">
-    <form method="POST" action="{{ url_for('add_user') }}">
-      <div class="mb-3">
-        <label for="username" class="form-label fw-semibold">Username</label>
-       <input
-  type="text"
-  class="form-control bg-secondary text-white border-0 shadow-sm"
-  id="username"
-  name="username"
-  placeholder="Enter username"
-  required
-  style="border-radius: 30px;"
->
-      </div>
-      <button type="submit" class="btn btn-outline-light w-100 fw-semibold">Add User</button>
+    <form method="post" class="bg-dark text-white p-4 rounded shadow-card" style="width: 100%; max-width: 500px;">
+        <div class="mb-3">
+            <label for="username" class="form-label fw-semibold">Username</label>
+            <input type="text"
+                   class="form-control bg-secondary text-white border-0 rounded-pill px-3"
+                   id="username" name="username"
+                   placeholder="Enter username"
+                   required>
+        </div>
+        <div class="mb-3 text-center">
+            <button type="submit" class="btn btn-outline-light px-4 py-2 fw-semibold rounded-pill w-100">
+                 Add User
+            </button>
+        </div>
+        <div class="text-center">
+            <a href="{{ url_for('list_users') }}" class="text-muted text-decoration-none">
+                ← Back to Users
+            </a>
+        </div>
     </form>
-  </div>
 </div>
 {% endblock %}

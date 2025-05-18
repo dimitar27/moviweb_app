@@ -71,17 +71,19 @@ def delete_user(user_id):
 @app.route('/users/<int:user_id>/add_movie', methods=['GET', 'POST'])
 def add_movie(user_id):
     all_users = data_manager.get_all_users()
-    user = None
-    for u in all_users:
-        if u["id"] == user_id:
-            user = u
-            break
+    user = next((u for u in all_users if u["id"] == user_id), None)
 
     if user is None:
         return "User not found", 404
 
     if request.method == 'POST':
-        title = request.form['title']
+        title = request.form['title'].strip().lower()
+        existing_movies = data_manager.get_user_movies(user_id)
+
+        for movie in existing_movies:
+            if movie['name'].strip().lower() == title:
+                flash('Movie already exists for this user.', 'warning')
+                return redirect(url_for('add_movie', user_id=user_id))
 
         try:
             url = f"http://www.omdbapi.com/?t={title}&apikey={OMDB_API_KEY}"
@@ -97,11 +99,7 @@ def add_movie(user_id):
             rating = data.get('imdbRating', '0')
             poster = data.get('Poster', '')
 
-            if year.isdigit():
-                year = int(year)
-            else:
-                year = 0
-
+            year = int(year) if year.isdigit() else 0
             try:
                 rating = float(rating)
             except ValueError:
@@ -117,14 +115,13 @@ def add_movie(user_id):
             }
 
             data_manager.add_movie(movie)
-
+            flash('Movie added successfully!', 'success')
             return redirect(url_for('user_movies', user_id=user_id))
-
         else:
-            return f"Movie '{title}' not found in OMDb!", 400
+            flash(f"Movie '{title}' not found in OMDb!", 'danger')
+            return redirect(url_for('add_movie', user_id=user_id))
 
     return render_template('add_movie.html', user=user)
-
 
 @app.route('/users/<int:user_id>/update_movie/<int:movie_id>', methods=['GET', 'POST'])
 def update_movie(user_id, movie_id):
