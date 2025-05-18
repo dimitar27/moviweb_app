@@ -2,6 +2,17 @@ body {
   font-family: 'Segoe UI', sans-serif;
 }
 
+.shadow-card {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  border-radius: 12px;
+}
+
+.shadow-card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  transform: translateY(-4px);
+}
+
 .section-heading {
   font-size: 1.8rem;
   font-weight: 600;
@@ -65,4 +76,16 @@ body {
 
 .back-button {
   margin-top: 2rem;
+}
+
+.form-control::placeholder {
+  color: #cccccc;
+  opacity: 0.8;
+}
+
+.form-control:focus {
+  background-color: #2b2b2b;
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 0 0 0.1rem rgba(255, 255, 255, 0.2);
 }
