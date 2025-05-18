@@ -1,28 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Update Movie</title>
-</head>
-<body>
-    <h1>Update Movie for {{ user.username }}</h1>
+{% extends 'base.html' %}
+{% block title %}Edit "{{ movie.name }}" - MovieWeb{% endblock %}
 
-    <form method="POST">
-        <label for="name">Movie Title:</label>
-        <input type="text" id="name" name="name" value="{{ movie.name }}" required><br><br>
+{% block content %}
+<h2 class="text-center text-white fw-bold mb-5">Edit "{{ movie.name }}"</h2>
 
-        <label for="director">Director:</label>
-        <input type="text" id="director" name="director" value="{{ movie.director }}" required><br><br>
+<div class="container">
+    <div class="row justify-content-center align-items-start g-5">
+        {% if movie.poster %}
+        <div class="col-md-4 text-center">
+            <img src="{{ movie.poster }}" alt="{{ movie.name }}"
+                 class="img-fluid shadow-card rounded"
+                 style="max-height: 400px; object-fit: contain;">
+        </div>
+        {% endif %}
 
-        <label for="year">Year:</label>
-        <input type="number" id="year" name="year" value="{{ movie.year }}" required><br><br>
+        <div class="col-md-6">
+            <div class="card bg-dark text-white p-4 shadow-card" style="border-radius: 12px;">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="title" class="form-label fw-semibold">Movie Title</label>
+                        <input type="text" class="form-control bg-secondary text-white border-0 rounded-pill px-3"
+                               id="title" name="name" value="{{ movie.name }}" required>
+                    </div>
 
-        <label for="rating">Rating:</label>
-        <input type="number" step="0.1" id="rating" name="rating" value="{{ movie.rating }}" required><br><br>
+                    <div class="mb-3">
+                        <label for="director" class="form-label fw-semibold">Director</label>
+                        <input type="text" class="form-control bg-secondary text-white border-0 rounded-pill px-3"
+                               id="director" name="director" value="{{ movie.director }}" required>
+                    </div>
 
-        <button type="submit">Update Movie</button>
-    </form>
+                    <div class="mb-3">
+                        <label for="year" class="form-label fw-semibold">Year</label>
+                        <input type="number" min="1888" max="2100"
+                               class="form-control no-spinner bg-secondary text-white border-0 rounded-pill px-3"
+                               id="year" name="year" value="{{ movie.year }}" required>
 
-    <p><a href="{{ url_for('user_movies', user_id=user.id) }}">← Back to {{ user.username }}'s Movies</a></p>
-</body>
-</html>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="rating" class="form-label fw-semibold">Rating</label>
+                        <input type="number" step="0.1" min="0" max="10"
+                               class="form-control no-spinner bg-secondary text-white border-0 rounded-pill px-3"
+                               id="rating" name="rating" value="{{ movie.rating }}" required>
+
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-outline-light fw-semibold rounded-pill">Update Movie
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-4 text-center">
+                    <a href="{{ url_for('user_movies', user_id=user.id) }}" class="text-decoration-none text-secondary">
+                        ← Back to {{ user.username }}'s Movies
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

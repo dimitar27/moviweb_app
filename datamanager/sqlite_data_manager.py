@@ -27,7 +27,7 @@ class SQLiteDataManager(DataManagerInterface):
                   year     INTEGER,
                   rating   REAL,
                   poster   TEXT,
-                  FOREIGN KEY(user_id) REFERENCES users(id)
+                  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
             """))
             db.session.commit()
@@ -41,7 +41,7 @@ class SQLiteDataManager(DataManagerInterface):
 
     def get_user_movies(self, user_id):
         rows = db.session.execute(
-            text("SELECT id, user_id, name, director, year, rating "
+            text("SELECT id, user_id, name, director, year, rating, poster "
                  "FROM movies WHERE user_id = :user_id;"),
             {"user_id": user_id}
         ).fetchall()
@@ -54,6 +54,13 @@ class SQLiteDataManager(DataManagerInterface):
         db.session.execute(
             text("INSERT INTO users (username) VALUES (:username);"),
             {"username": username}
+        )
+        db.session.commit()
+
+    def delete_user(self, user_id):
+        db.session.execute(
+            text("DELETE FROM users WHERE id = :user_id;"),
+            {"user_id": user_id}
         )
         db.session.commit()
 

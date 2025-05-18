@@ -4,8 +4,10 @@ from datamanager.sqlite_data_manager import SQLiteDataManager
 from flask import request, redirect, url_for
 from dotenv import load_dotenv
 import requests
+from flask import flash
 
 app = Flask(__name__, instance_relative_config=True)
+app.secret_key = "dev"
 os.makedirs(app.instance_path, exist_ok=True)
 
 db_path = os.path.join(app.instance_path, "moviwebapp.db")
@@ -35,6 +37,7 @@ def user_movies(user_id):
     try:
         user = None
         movies = data_manager.get_user_movies(user_id)
+        movies = list(reversed(movies))
         users = data_manager.get_all_users()
         for u in users:
             if u["id"] == user_id:
@@ -54,6 +57,16 @@ def add_user():
         return render_template('add_user.html')
     except Exception as e:
         return f"Error adding user: {str(e)}", 500
+
+@app.route('/users/<int:user_id>/delete', methods=['POST'])
+def delete_user(user_id):
+    try:
+        data_manager.delete_user(user_id)
+        flash("User deleted successfully!", "success")
+        return redirect(url_for('list_users'))
+    except Exception as e:
+        flash(f"Error deleting user: {str(e)}", "danger")
+        return redirect(url_for('list_users'))
 
 @app.route('/users/<int:user_id>/add_movie', methods=['GET', 'POST'])
 def add_movie(user_id):
@@ -116,22 +129,12 @@ def add_movie(user_id):
 @app.route('/users/<int:user_id>/update_movie/<int:movie_id>', methods=['GET', 'POST'])
 def update_movie(user_id, movie_id):
     try:
-        user = None
-        for u in data_manager.get_all_users():
-            if u['id'] == user_id:
-                user = u
-                break
-
+        user = next((u for u in data_manager.get_all_users() if u['id'] == user_id), None)
         if user is None:
             return "User not found", 404
 
         movies = data_manager.get_user_movies(user_id)
-        movie = None
-        for m in movies:
-            if m['id'] == movie_id:
-                movie = m
-                break
-
+        movie = next((m for m in movies if m['id'] == movie_id), None)
         if movie is None:
             return "Movie not found", 404
 
@@ -139,10 +142,28 @@ def update_movie(user_id, movie_id):
             movie['name'] = request.form['name']
             movie['director'] = request.form['director']
             movie['year'] = int(request.form['year'])
-            movie['rating'] = float(request.form['rating'])
+
+            try:
+                rating = float(request.form['rating'])
+                if rating < 0 or rating > 10:
+                    flash("Rating must be between 0 and 10.", "danger")
+                    return redirect(request.url)
+                movie['rating'] = rating
+            except ValueError:
+                flash("Invalid rating format.", "danger")
+                return redirect(request.url)
+
+            try:
+                year = int(request.form['year'])
+                if year < 1888 or year > 2100:
+                    flash("Year must be between 1888 and 2100.", "danger")
+                    return redirect(request.url)
+                movie['year'] = year
+            except ValueError:
+                flash("Invalid year format.", "danger")
+                return redirect(request.url)
 
             data_manager.update_movie(movie)
-
             return redirect(url_for('user_movies', user_id=user_id))
 
         return render_template('update_movie.html', user=user, movie=movie)

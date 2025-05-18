@@ -56,8 +56,8 @@ body {
   color: white;
   margin-bottom: 1rem;
   text-shadow:
-    1px 1px #25f4ee,   /* subtle cyan glow */
-    -1px -1px #fe2c55; /* subtle pink glow */
+    1px 1px #25f4ee,
+    -1px -1px #fe2c55;
 }
 
 
@@ -88,4 +88,32 @@ body {
   color: white;
   border-color: transparent;
   box-shadow: 0 0 0 0.1rem rgba(255, 255, 255, 0.2);
+}
+
+.btn-edit {
+  border: 1px solid #00BFFF; /* Light blue */
+  color: #00BFFF;
+  background-color: transparent;
+  padding: 5px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-edit:hover {
+  background-color: #00BFFF;
+  color: white;
+}
+
+.btn-delete {
+  border: 1px solid #ff4d4f;
+  color: #ff4d4f;
+  background-color: transparent;
+  padding: 5px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-delete:hover {
+  background-color: #ff4d4f;
+  color: white;
 }
