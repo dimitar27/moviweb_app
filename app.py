@@ -18,11 +18,8 @@ OMDB_API_KEY = os.getenv("OMDB_API_KEY")
 
 @app.route('/')
 def home():
-    try:
-        recent_movies = data_manager.get_recent_movies(limit=6)  # or whatever number you prefer
-        return render_template('home.html', recent_movies=recent_movies)
-    except Exception as e:
-        return f"Error loading home page: {str(e)}", 500
+    movies = data_manager.get_top_movies()
+    return render_template('home.html', recent_movies=movies)
 
 @app.route('/users')
 def list_users():
@@ -115,7 +112,7 @@ def add_movie(user_id):
             }
 
             data_manager.add_movie(movie)
-            flash('Movie added successfully!', 'success')
+            #flash('Movie added successfully!', 'success')
             return redirect(url_for('user_movies', user_id=user_id))
         else:
             flash(f"Movie '{title}' not found in OMDb!", 'danger')
@@ -176,7 +173,6 @@ def delete_movie(user_id, movie_id):
         return redirect(url_for('user_movies', user_id=user_id))
     except Exception as e:
         return f"Error deleting movie: {str(e)}", 500
-
 
 @app.errorhandler(404)
 def page_not_found(e):

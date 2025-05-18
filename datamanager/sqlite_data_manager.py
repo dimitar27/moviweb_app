@@ -110,17 +110,19 @@ class SQLiteDataManager(DataManagerInterface):
         )
         db.session.commit()
 
-    def get_recent_movies(self, limit=3):
+    def get_top_movies(self, limit=6):
         rows = db.session.execute(
             text("""
                 SELECT name, director, year, rating, poster
                 FROM movies
-                ORDER BY id DESC
-                LIMIT :limit;
+                GROUP BY name
+                ORDER BY rating DESC
+                LIMIT :limit
             """),
             {"limit": limit}
         ).fetchall()
-        result = []
+
+        movies = []
         for row in rows:
-            result.append(dict(row._mapping))
-        return result
+            movies.append(dict(row._mapping))
+        return movies
